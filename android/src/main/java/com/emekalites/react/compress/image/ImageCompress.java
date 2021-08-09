@@ -53,9 +53,12 @@ public class ImageCompress {
         return compressToFile(imageFile, System.currentTimeMillis()+".jpg", path);
     }
 
-    private File compressToFile(File imageFile, String compressedFileName, String path) throws IOException {
+    public File compressToFile(File imageFile, String compressedFileName, String path) throws IOException {
         File file = new File(destinationDirectoryPath, path);
+
         return ImageUtil.compressImage(imageFile, maxWidth, maxHeight, compressFormat, quality,
                 file.getAbsolutePath() + File.separator + compressedFileName);
+
+        // return ImageUtil.compressImageV2(imageFile, file.getAbsolutePath() + File.separator + compressedFileName, quality, maxWidth, maxHeight);
     }
 }

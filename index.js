@@ -7,9 +7,9 @@ export default {
       ImageCompressAndroid.createCompressedImage(imagePath, directoryPath, resolve, reject);
     });
   },
-  createCustomCompressedImage: (imagePath, directoryPath, maxWidth, maxHeight, quality) => {
+  createCustomCompressedImage: (imagePath, directoryPath, outputName, maxWidth, maxHeight, quality) => {
     return new Promise((resolve, reject) => {
-      ImageCompressAndroid.createCustomCompressedImage(imagePath, directoryPath, maxWidth, maxHeight, quality, resolve, reject);
+      ImageCompressAndroid.createCustomCompressedImage(imagePath, directoryPath, outputName, maxWidth, maxHeight, quality, resolve, reject);
     });
   },
 };

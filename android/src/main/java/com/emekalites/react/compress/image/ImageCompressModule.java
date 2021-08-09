@@ -61,22 +61,22 @@ public class ImageCompressModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void createCustomCompressedImage(String imagePath, String directoryPath, int maxWidth, int maxHeight, int quality, final Callback successCb, final Callback failureCb) {
+    public void createCustomCompressedImage(String imagePath, String directoryPath, String outputName, int maxWidth, int maxHeight, int quality, final Callback successCb, final Callback failureCb) {
         try {
-            createCustomCompressedImageWithExceptions(imagePath, directoryPath, maxWidth, maxHeight, quality, successCb, failureCb);
+            createCustomCompressedImageWithExceptions(imagePath, directoryPath, outputName, maxWidth, maxHeight, quality, successCb, failureCb);
         } catch (IOException e) {
             failureCb.invoke(e.getMessage());
         }
     }
 
-    private void createCustomCompressedImageWithExceptions(String image, String directoryPath, int maxWidth, int maxHeight, int quality, final Callback successCb, final Callback failureCb) throws IOException {
+    private void createCustomCompressedImageWithExceptions(String image, String directoryPath, String outputName, int maxWidth, int maxHeight, int quality, final Callback successCb, final Callback failureCb) throws IOException {
         File imageFile = new ImageCompress(mContext)
                     .setMaxWidth(maxWidth)
                     .setMaxHeight(maxHeight)
                     .setQuality(quality)
                     .setCompressFormat(Bitmap.CompressFormat.JPEG)
-                    .setDestinationDirectoryPath(Environment.getExternalStorageDirectory().getPath())
-                    .compressToFile(new File(uriPath.getRealPathFromURI(Uri.parse(image))), directoryPath);
+                    .setDestinationDirectoryPath(directoryPath)
+                    .compressToFile(new File(uriPath.getRealPathFromURI(Uri.parse(image))), outputName, "");
 
         if (imageFile != null) {
             WritableMap response = Arguments.createMap();
