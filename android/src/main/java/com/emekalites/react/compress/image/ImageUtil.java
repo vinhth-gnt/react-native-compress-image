@@ -10,6 +10,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import java.io.ByteArrayOutputStream;
+import com.facebook.react.bridge.ReadableArray;
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.Arguments;
 
 /**
  * Created by emnity on 10/7/17.
@@ -19,98 +22,53 @@ public class ImageUtil {
     private ImageUtil() {
     }
 
-    public static File compressImageV2(File imageFile, String destinationPath, int quality, int reqWidth, int reqHeight) {
-        File outputFile = new File(destinationPath).getParentFile();
-        if (!outputFile.exists()) {
-            outputFile.mkdirs();
+    public static File compressImageV2(String imagePath, float ratio, String destinationPath) throws IOException {
+        FileOutputStream fileOutputStream = null;
+        File file = new File(destinationPath).getParentFile();
+        if (!file.exists()) {
+            file.mkdirs();
         }
-        
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        // Bitmap bmm = decodeSampledBitmapFromFile(imageFile, reqWidth, reqHeight);
-        Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath(), options);
-        long maxSize = (long) (imageFile.length() * (quality * 1.0 / 100));
-        long streamLength = maxSize;
-        int compressQuality = 88;
-        ByteArrayOutputStream bmpStream = new ByteArrayOutputStream();
-        while (streamLength >= maxSize && compressQuality > 4) {
-            try {
-                bmpStream.flush(); //to avoid out of memory error
-                bmpStream.reset();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            compressQuality -= 4;
-            bitmap.compress(Bitmap.CompressFormat.JPEG, compressQuality, bmpStream);
-            streamLength = (long) bmpStream.size();
-        }
-        FileOutputStream fo = null;
         try {
-            fo = new FileOutputStream(outputFile);
-            fo.write(bmpStream.toByteArray());
-            fo.flush();
-            fo.close();
-        } catch (IOException e) {
-            return null;
-        } 
-        return outputFile;
+            fileOutputStream = new FileOutputStream(destinationPath);
+            // write the compressed bitmap at the destination specified by destinationPath.
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = false;
+            Bitmap bm = BitmapFactory.decodeFile(imagePath, options);
+            int reqHeight = (int) (options.outHeight * ratio);
+            int reqWidth = (int) (options.outWidth * ratio);
+            Bitmap resizedBm = Bitmap.createScaledBitmap(bm, reqWidth, reqHeight, false);
+            resizedBm.compress(Bitmap.CompressFormat.JPEG, 100, fileOutputStream);
+        } finally {
+            if (fileOutputStream != null) {
+                fileOutputStream.flush();
+                fileOutputStream.close();
+            }
+        }
+
+        return new File(destinationPath);
     }
+
 
     public static File compressImage(File imageFile, int reqWidth, int reqHeight, Bitmap.CompressFormat compressFormat,
                                      int quality, String destinationPath) throws IOException {
-        // FileOutputStream fileOutputStream = null;
-        // File file = new File(destinationPath).getParentFile();
-        // if (!file.exists()) {
-        //     file.mkdirs();
-        // }
-        // try {
-        //     fileOutputStream = new FileOutputStream(destinationPath);
-        //     // write the compressed bitmap at the destination specified by destinationPath.
-        //     Bitmap bm = decodeSampledBitmapFromFile(imageFile, reqWidth, reqHeight);
-        //     bm.compress(compressFormat, quality, fileOutputStream);
-        // } finally {
-        //     if (fileOutputStream != null) {
-        //         fileOutputStream.flush();
-        //         fileOutputStream.close();
-        //     }
-        // }
+         FileOutputStream fileOutputStream = null;
+         File file = new File(destinationPath).getParentFile();
+         if (!file.exists()) {
+             file.mkdirs();
+         }
+         try {
+             fileOutputStream = new FileOutputStream(destinationPath);
+             // write the compressed bitmap at the destination specified by destinationPath.
+             Bitmap bm = decodeSampledBitmapFromFile(imageFile, reqWidth, reqHeight);
+             bm.compress(compressFormat, quality, fileOutputStream);
+         } finally {
+             if (fileOutputStream != null) {
+                 fileOutputStream.flush();
+                 fileOutputStream.close();
+             }
+         }
 
-        // return new File(destinationPath);
-
-        File outputFile = new File(destinationPath).getParentFile();
-        if (!outputFile.exists()) {
-            outputFile.mkdirs();
-        }
-        
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        Bitmap bitmap = decodeSampledBitmapFromFile(imageFile, reqWidth, reqHeight);
-        // Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath(), options);
-        long maxSize = (long) (imageFile.length() * (quality * 1.0 / 100));
-        long streamLength = maxSize;
-        int compressQuality = 98;
-        ByteArrayOutputStream bmpStream = new ByteArrayOutputStream();
-        while (streamLength >= maxSize && compressQuality > 2) {
-            try {
-                bmpStream.flush(); //to avoid out of memory error
-                bmpStream.reset();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            compressQuality -= 2;
-            bitmap.compress(Bitmap.CompressFormat.JPEG, compressQuality, bmpStream);
-            streamLength = (long) bmpStream.size();
-        }
-        FileOutputStream fo = null;
-        try {
-            fo = new FileOutputStream(destinationPath);
-            fo.write(bmpStream.toByteArray());
-            fo.flush();
-            fo.close();
-        } catch (IOException e) {
-            return null;
-        } 
-        return outputFile;
+         return new File(destinationPath);
     }
 
     private static Bitmap decodeSampledBitmapFromFile(File imageFile, int reqWidth, int reqHeight) throws IOException {
@@ -167,5 +125,35 @@ public class ImageUtil {
         }
 
         return inSampleSize;
+    }
+
+    public static long calculateSize(ReadableArray paths, float ratio){
+        long size = 0;
+        ByteArrayOutputStream bmpStream = new ByteArrayOutputStream();
+        for (int keyIndex = 0; keyIndex < paths.size(); keyIndex++) {
+            String path = paths.getString(keyIndex);
+
+            File file = new File(path);
+            if (ratio == 1){
+                size += file.length();
+            } else {
+                BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inJustDecodeBounds = false;
+                Bitmap bm = BitmapFactory.decodeFile(file.getPath(), options);
+                int reqHeight = (int) (options.outHeight * ratio);
+                int reqWidth = (int) (options.outWidth * ratio);
+                Bitmap resizedBm = Bitmap.createScaledBitmap(bm, reqWidth, reqHeight, false);
+                try {
+                    bmpStream.flush(); //to avoid out of memory error
+                    bmpStream.reset();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                resizedBm.compress(Bitmap.CompressFormat.JPEG, 100, bmpStream);
+                size += (long) bmpStream.size();
+            }
+        }
+
+        return size;
     }
 }
