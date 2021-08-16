@@ -24,9 +24,10 @@ public class ImageUtil {
 
     public static File compressImageV2(String imagePath, float ratio, String destinationPath) throws IOException {
         FileOutputStream fileOutputStream = null;
-        File file = new File(destinationPath).getParentFile();
-        if (!file.exists()) {
-            file.mkdirs();
+        File file = new File(destinationPath);
+        File parentFile = file.getParentFile();
+        if (!parentFile.exists()) {
+            parentFile.mkdirs();
         }
         try {
             fileOutputStream = new FileOutputStream(destinationPath);
@@ -45,30 +46,41 @@ public class ImageUtil {
             }
         }
 
+        ExifInterface exif = new ExifInterface(imagePath);
+        String lat = exif.getAttribute(ExifInterface.TAG_GPS_LATITUDE);
+        String lng = exif.getAttribute(ExifInterface.TAG_GPS_LONGITUDE);
+
+        ExifInterface newExif = new ExifInterface(file.getAbsolutePath());
+        newExif.setAttribute(ExifInterface.TAG_GPS_LATITUDE, lat);
+        newExif.setAttribute(ExifInterface.TAG_GPS_LATITUDE_REF, lat);
+        newExif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE, lng);
+        newExif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, lng);
+        newExif.saveAttributes();
+
         return new File(destinationPath);
     }
 
 
     public static File compressImage(File imageFile, int reqWidth, int reqHeight, Bitmap.CompressFormat compressFormat,
                                      int quality, String destinationPath) throws IOException {
-         FileOutputStream fileOutputStream = null;
-         File file = new File(destinationPath).getParentFile();
-         if (!file.exists()) {
-             file.mkdirs();
-         }
-         try {
-             fileOutputStream = new FileOutputStream(destinationPath);
-             // write the compressed bitmap at the destination specified by destinationPath.
-             Bitmap bm = decodeSampledBitmapFromFile(imageFile, reqWidth, reqHeight);
-             bm.compress(compressFormat, quality, fileOutputStream);
-         } finally {
-             if (fileOutputStream != null) {
-                 fileOutputStream.flush();
-                 fileOutputStream.close();
-             }
-         }
+        FileOutputStream fileOutputStream = null;
+        File file = new File(destinationPath).getParentFile();
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+        try {
+            fileOutputStream = new FileOutputStream(destinationPath);
+            // write the compressed bitmap at the destination specified by destinationPath.
+            Bitmap bm = decodeSampledBitmapFromFile(imageFile, reqWidth, reqHeight);
+            bm.compress(compressFormat, quality, fileOutputStream);
+        } finally {
+            if (fileOutputStream != null) {
+                fileOutputStream.flush();
+                fileOutputStream.close();
+            }
+        }
 
-         return new File(destinationPath);
+        return new File(destinationPath);
     }
 
     private static Bitmap decodeSampledBitmapFromFile(File imageFile, int reqWidth, int reqHeight) throws IOException {
