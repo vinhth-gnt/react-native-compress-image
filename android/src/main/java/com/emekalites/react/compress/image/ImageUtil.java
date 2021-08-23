@@ -38,7 +38,9 @@ public class ImageUtil {
             int reqHeight = (int) (options.outHeight * ratio);
             int reqWidth = (int) (options.outWidth * ratio);
             Bitmap resizedBm = Bitmap.createScaledBitmap(bm, reqWidth, reqHeight, false);
-            resizedBm.compress(Bitmap.CompressFormat.JPEG, 100, fileOutputStream);
+            resizedBm.compress(Bitmap.CompressFormat.JPEG, 50, fileOutputStream);
+            bm.recycle();
+            resizedBm.recycle();
         } finally {
             if (fileOutputStream != null) {
                 fileOutputStream.flush();
@@ -161,8 +163,10 @@ public class ImageUtil {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                resizedBm.compress(Bitmap.CompressFormat.JPEG, 100, bmpStream);
+                resizedBm.compress(Bitmap.CompressFormat.JPEG, 50, bmpStream);
                 size += (long) bmpStream.size();
+                bm.recycle();
+                resizedBm.recycle();
             }
         }
 
